@@ -1,0 +1,917 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Configurar ferramentas de QA (Pint, PHPStan, Husky)",
+        "description": "Instalar e configurar Laravel Pint, PHPStan e Husky com git hooks para garantir qualidade de código antes de commits e pushes",
+        "details": "1. Laravel Pint já instalado (composer.json). Criar script composer 'format': 'vendor/bin/pint'.\n2. Instalar PHPStan: composer require --dev phpstan/phpstan larastan/larastan. Criar phpstan.neon na raiz com level: max, paths: [app, database]. Script composer 'analyse': 'vendor/bin/phpstan analyse'.\n3. Instalar Husky: npm install --save-dev husky && npx husky init. Criar hooks:\n   - .husky/pre-commit: 'composer format' (bloqueia se falhar)\n   - .husky/pre-push: 'composer analyse && composer test' (bloqueia se falhar)\n4. Criar script 'quality-check' no composer.json executando format, analyse e test em sequência.\n5. Validar hooks funcionando com commit/push de teste.\n\nArquivo phpstan.neon:\nincludes:\n    - vendor/larastan/larastan/extension.neon\nparameters:\n    level: max\n    paths:\n        - app\n        - database",
+        "testStrategy": "Validar hooks bloqueando commits/pushes com erros. Executar 'composer quality-check' sem erros. Introduzir erro proposital em arquivo PHP e verificar bloqueio pelo hook.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configurar Laravel Pint e criar script composer format",
+            "description": "Verificar instalação do Laravel Pint (já presente no composer.json) e criar script composer 'format' para executar o formatador de código",
+            "dependencies": [],
+            "details": "1. Verificar que laravel/pint está instalado em composer.json na seção require-dev\n2. Adicionar script 'format' no composer.json: \"format\": \"vendor/bin/pint\"\n3. Executar 'composer format' para validar funcionamento\n4. Verificar que código PHP é formatado automaticamente conforme padrão Laravel\n5. Documentar uso do comando no README se necessário",
+            "status": "pending",
+            "testStrategy": "Executar 'composer format' e verificar que formata código sem erros. Introduzir formatação incorreta proposital (espaçamento, indentação) e validar que Pint corrige automaticamente."
+          },
+          {
+            "id": 2,
+            "title": "Instalar e configurar PHPStan com Larastan",
+            "description": "Instalar PHPStan e Larastan como dependências de desenvolvimento, criar arquivo phpstan.neon com configuração de análise estática no nível máximo",
+            "dependencies": [],
+            "details": "1. Executar: composer require --dev phpstan/phpstan larastan/larastan\n2. Criar arquivo phpstan.neon na raiz do projeto com conteúdo:\n```\nincludes:\n    - vendor/larastan/larastan/extension.neon\nparameters:\n    level: max\n    paths:\n        - app\n        - database\n```\n3. Adicionar script 'analyse' no composer.json: \"analyse\": \"vendor/bin/phpstan analyse\"\n4. Executar 'composer analyse' para validar configuração\n5. Corrigir eventuais erros identificados pelo PHPStan level max",
+            "status": "pending",
+            "testStrategy": "Executar 'composer analyse' e verificar análise completa sem erros críticos. Introduzir erro de tipo proposital (ex: passar string onde espera int) e validar detecção pelo PHPStan."
+          },
+          {
+            "id": 3,
+            "title": "Instalar Husky e configurar git hooks pre-commit e pre-push",
+            "description": "Instalar Husky, inicializar configuração e criar hooks de git para executar verificações de qualidade antes de commits e pushes",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "1. Executar: npm install --save-dev husky\n2. Inicializar Husky: npx husky init\n3. Criar hook .husky/pre-commit:\n```bash\n#!/usr/bin/env sh\n. \"$(dirname -- \"$0\")/_/husky.sh\"\n\ncomposer format || exit 1\n```\n4. Criar hook .husky/pre-push:\n```bash\n#!/usr/bin/env sh\n. \"$(dirname -- \"$0\")/_/husky.sh\"\n\ncomposer analyse && composer test || exit 1\n```\n5. Tornar hooks executáveis: chmod +x .husky/pre-commit .husky/pre-push\n6. Criar script 'quality-check' no composer.json executando: format, analyse e test em sequência",
+            "status": "pending",
+            "testStrategy": "Tentar commit com código mal formatado e verificar bloqueio pelo pre-commit. Tentar push com erro de análise estática e verificar bloqueio pelo pre-push. Executar 'composer quality-check' e validar execução sequencial completa."
+          },
+          {
+            "id": 4,
+            "title": "Validar funcionamento dos hooks com commits e pushes de teste",
+            "description": "Realizar testes práticos de commit e push com erros propositais para garantir que os hooks do Husky bloqueiam operações inadequadas",
+            "dependencies": [
+              3
+            ],
+            "details": "1. Criar arquivo PHP de teste com formatação incorreta (espaçamento inconsistente, indentação errada)\n2. Tentar commit e verificar que pre-commit bloqueia até executar 'composer format'\n3. Após corrigir formatação, fazer commit com sucesso\n4. Introduzir erro de tipo no código (ex: type hint incorreto)\n5. Tentar push e verificar que pre-push bloqueia devido ao PHPStan\n6. Corrigir erro de tipo e executar push com sucesso\n7. Executar 'composer quality-check' completo e validar todos os checks passando\n8. Documentar comportamento dos hooks no README ou CONTRIBUTING.md",
+            "status": "pending",
+            "testStrategy": "Ciclo completo: criar erro formatação → commit bloqueado → corrigir → commit ok → criar erro tipo → push bloqueado → corrigir → push ok. Validar que 'composer quality-check' executa format + analyse + test sem falhas."
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Instalar e configurar Filament PHP v4",
+        "description": "Instalar Filament PHP 4 para criar painel administrativo moderno e configurar estrutura inicial",
+        "details": "1. Instalar Filament: composer require filament/filament:^4.0\n2. Executar instalação: php artisan filament:install --panels\n3. Publicar assets: php artisan filament:assets\n4. Criar usuário admin: php artisan make:filament-user (email, senha)\n5. Configurar app/Providers/Filament/AdminPanelProvider.php:\n   - Idioma: pt_BR\n   - Colors::Amber como cor primária\n   - Timezone: America/Sao_Paulo\n6. Validar acesso em https://user-contact.test/admin\n7. Executar npm run build para compilar assets frontend.\n\nConfigurações no AdminPanelProvider:\n->id('admin')\n->path('admin')\n->login()\n->colors(['primary' => Color::Amber])\n->locale('pt_BR')",
+        "testStrategy": "Acessar /admin, fazer login, verificar interface em português, painel carregando sem erros. Testar logout e relogin.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Instalar pacote Filament PHP v4 via Composer",
+            "description": "Executar comando composer para instalar Filament PHP versão 4 e suas dependências no projeto Laravel",
+            "dependencies": [],
+            "details": "Executar: composer require filament/filament:^4.0\n\nVerificar instalação bem-sucedida checando composer.json e composer.lock. Garantir que versão instalada seja 4.x. Após instalação, verificar se há conflitos de dependências.",
+            "status": "pending",
+            "testStrategy": "Verificar composer.json contém 'filament/filament': '^4.0'. Executar 'composer show filament/filament' e confirmar versão 4.x instalada."
+          },
+          {
+            "id": 2,
+            "title": "Executar instalação Filament e publicar assets",
+            "description": "Executar comandos artisan para instalar painel Filament e publicar recursos estáticos necessários",
+            "dependencies": [
+              1
+            ],
+            "details": "Executar sequencialmente:\n1. php artisan filament:install --panels\n2. php artisan filament:assets\n\nO primeiro comando cria estrutura de painel (AdminPanelProvider em app/Providers/Filament/). O segundo publica assets CSS/JS do Filament. Verificar criação de AdminPanelProvider.php.",
+            "status": "pending",
+            "testStrategy": "Confirmar arquivo app/Providers/Filament/AdminPanelProvider.php criado. Verificar assets publicados em public/vendor/filament/. Executar comandos sem erros."
+          },
+          {
+            "id": 3,
+            "title": "Criar usuário administrador para acesso ao painel",
+            "description": "Gerar primeiro usuário admin via comando artisan para permitir login no painel Filament",
+            "dependencies": [
+              2
+            ],
+            "details": "Executar: php artisan make:filament-user\n\nInformar:\n- Nome: Admin\n- Email: admin@usercontact.test\n- Senha: senha segura (anotar para testes)\n\nComando cria registro na tabela users. Se migration users não executada, rodar php artisan migrate primeiro.",
+            "status": "pending",
+            "testStrategy": "Executar: php artisan tinker --execute=\"User::where('email', 'admin@usercontact.test')->exists()\" deve retornar true. Verificar registro criado no banco."
+          },
+          {
+            "id": 4,
+            "title": "Configurar AdminPanelProvider (idioma, cor, timezone)",
+            "description": "Personalizar configurações do painel admin no provider: idioma português brasileiro, cor primária Amber, timezone São Paulo",
+            "dependencies": [
+              3
+            ],
+            "details": "Editar app/Providers/Filament/AdminPanelProvider.php no método panel():\n\n->id('admin')\n->path('admin')\n->login()\n->colors(['primary' => Color::Amber])\n->locale('pt_BR')\n->discoverResources(in: app_path('Filament/Resources'), for: 'App\\\\Filament\\\\Resources')\n->discoverPages(in: app_path('Filament/Pages'), for: 'App\\\\Filament\\\\Pages')\n->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\\\Filament\\\\Widgets')\n\nAdicionar em config/app.php: 'timezone' => 'America/Sao_Paulo' se ainda não configurado.\n\nImportar: use Filament\\Support\\Colors\\Color;",
+            "status": "pending",
+            "testStrategy": "Verificar código em AdminPanelProvider contém ->locale('pt_BR') e ->colors(['primary' => Color::Amber]). Acessar /admin e confirmar interface em português."
+          },
+          {
+            "id": 5,
+            "title": "Validar acesso ao painel e compilar assets frontend",
+            "description": "Testar login no painel administrativo e compilar assets frontend com npm para garantir interface funcional",
+            "dependencies": [
+              4
+            ],
+            "details": "1. Executar: npm run build (compila Tailwind CSS e JS do Vite)\n2. Acessar: https://user-contact.test/admin\n3. Fazer login com credenciais criadas na subtask 3\n4. Verificar:\n   - Interface carregando sem erros 404/500\n   - Textos em português (Dashboard, Perfil, etc)\n   - Cor primária Amber visível em botões/links\n   - Sem erros no console do navegador\n5. Testar logout e relogin\n\nSe Vite não configurado, executar 'npm install' primeiro.",
+            "status": "pending",
+            "testStrategy": "Acessar /admin, login bem-sucedido, dashboard exibido em pt_BR com cor Amber. Console navegador sem erros. Logout e relogin funcionando. Executar 'npm run build' sem erros."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Criar migration e model para tabela de usuários customizada",
+        "description": "Modificar migration existente de users para incluir campos específicos do PRD (nome, email, data_nascimento)",
+        "details": "1. Editar migration 0001_01_01_000000_create_users_table.php:\n   - Manter $table->id(), timestamps\n   - Alterar 'name' para 'nome': $table->string('nome')\n   - Manter 'email' único\n   - Adicionar 'data_nascimento': $table->date('data_nascimento')->nullable()\n   - Remover campos de autenticação (password, remember_token, email_verified_at) - não requeridos pelo PRD\n   - Remover tabelas password_reset_tokens e sessions se não necessárias\n2. Atualizar model User (app/Models/User.php):\n   - $fillable = ['nome', 'email', 'data_nascimento']\n   - $casts = ['data_nascimento' => 'date']\n   - Remover traits de autenticação se não necessárias\n3. Executar: php artisan migrate:fresh\n4. Criar factory (database/factories/UserFactory.php) com Faker para campos.\n5. Criar seeder (database/seeders/UserSeeder.php) gerando 20 usuários fake.\n\nSchema final:\n- id (bigint unsigned)\n- nome (string 255)\n- email (string 255, unique)\n- data_nascimento (date, nullable)\n- created_at, updated_at (timestamps)",
+        "testStrategy": "Executar migrate:fresh sem erros. Executar seeder criando 20 users. Validar via tinker: User::count() === 20. Verificar factory gerando dados válidos.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Modificar migration users removendo campos de autenticação",
+            "description": "Editar migration 0001_01_01_000000_create_users_table.php para remover campos de autenticação (password, remember_token, email_verified_at) e renomear campo 'name' para 'nome'",
+            "dependencies": [],
+            "details": "Abrir arquivo database/migrations/0001_01_01_000000_create_users_table.php. Manter $table->id() e timestamps. Alterar $table->string('name') para $table->string('nome'). Manter $table->string('email')->unique(). Remover linhas: $table->string('password'), $table->rememberToken(), $table->timestamp('email_verified_at')->nullable(). Verificar e remover schemas de tabelas password_reset_tokens e sessions se existirem no mesmo arquivo de migration.",
+            "status": "pending",
+            "testStrategy": "Revisar migration editada confirmando ausência de campos auth e presença de campo 'nome'"
+          },
+          {
+            "id": 2,
+            "title": "Adicionar campo data_nascimento na migration users",
+            "description": "Adicionar coluna data_nascimento (date, nullable) na migration de users após os campos existentes",
+            "dependencies": [
+              1
+            ],
+            "details": "No mesmo arquivo database/migrations/0001_01_01_000000_create_users_table.php, adicionar linha $table->date('data_nascimento')->nullable() após campo email e antes de timestamps. Confirmar que schema final contém: id, nome, email (unique), data_nascimento (nullable), created_at, updated_at.",
+            "status": "pending",
+            "testStrategy": "Validar estrutura final da migration com todos campos especificados no PRD"
+          },
+          {
+            "id": 3,
+            "title": "Atualizar Model User removendo traits de autenticação",
+            "description": "Modificar app/Models/User.php para refletir novos campos e remover funcionalidades de autenticação não necessárias",
+            "dependencies": [
+              2
+            ],
+            "details": "Abrir app/Models/User.php. Atualizar $fillable = ['nome', 'email', 'data_nascimento']. Adicionar $casts = ['data_nascimento' => 'date']. Remover traits: Authenticatable, MustVerifyEmail, HasApiTokens (se existirem). Remover $hidden (password, remember_token). Manter apenas extends Model. Verificar se uso de HasFactory está presente.",
+            "status": "pending",
+            "testStrategy": "Revisar model confirmando $fillable e $casts corretos, traits auth removidas"
+          },
+          {
+            "id": 4,
+            "title": "Criar/atualizar UserFactory com novos campos",
+            "description": "Modificar database/factories/UserFactory.php para gerar dados fake para campos nome, email e data_nascimento",
+            "dependencies": [
+              3
+            ],
+            "details": "Editar database/factories/UserFactory.php. Método definition() retornar: 'nome' => fake()->name(), 'email' => fake()->unique()->safeEmail(), 'data_nascimento' => fake()->dateTimeBetween('-80 years', '-18 years')->format('Y-m-d'). Remover campos password, email_verified_at se existirem. Confirmar uso correto de Faker para datas válidas (maiores 18 anos).",
+            "status": "pending",
+            "testStrategy": "Executar User::factory()->make() no tinker e validar estrutura dos dados gerados"
+          },
+          {
+            "id": 5,
+            "title": "Criar UserSeeder gerando 20 registros",
+            "description": "Criar seeder database/seeders/UserSeeder.php que utilize factory para gerar 20 usuários de teste",
+            "dependencies": [
+              4
+            ],
+            "details": "Executar: php artisan make:seeder UserSeeder. Abrir database/seeders/UserSeeder.php. No método run(), adicionar: \\App\\Models\\User::factory()->count(20)->create(). Registrar seeder em DatabaseSeeder.php chamando $this->call(UserSeeder::class) no método run().",
+            "status": "pending",
+            "testStrategy": "Executar php artisan db:seed --class=UserSeeder e verificar 20 registros criados"
+          },
+          {
+            "id": 6,
+            "title": "Executar migrate:fresh e validar com tinker",
+            "description": "Rodar migrations do zero, executar seeders e validar dados criados usando tinker",
+            "dependencies": [
+              5
+            ],
+            "details": "Executar: php artisan migrate:fresh --seed. Comando recria banco, roda migrations e seeders. Abrir tinker: php artisan tinker. Validar: User::count() retorna 20. User::first() mostra objeto com campos nome, email, data_nascimento. User::all()->pluck('nome') retorna 20 nomes. Verificar ausência de campos auth (password, remember_token).",
+            "status": "pending",
+            "testStrategy": "Validar via tinker: User::count() === 20, User::first() contém campos corretos (nome, email, data_nascimento), sem campos de autenticação"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Criar migration, model e enum para tabela de contatos",
+        "description": "Criar estrutura completa para entidade Contatos com relacionamento 1:N com Usuários e enum para tipos",
+        "details": "1. Criar enum TipoContato: php artisan make:enum TipoContato\n   - Caminho: app/Enums/TipoContato.php\n   - Cases: Email, Telefone (TitleCase)\n2. Criar migration: php artisan make:migration create_contatos_table\n   - $table->id()\n   - $table->foreignId('usuario_id')->constrained('users')->cascadeOnDelete()\n   - $table->string('tipo') // Armazena valor do enum\n   - $table->string('valor')\n   - $table->timestamps()\n   - Índice em usuario_id\n3. Criar model: php artisan make:model Contato\n   - $fillable = ['usuario_id', 'tipo', 'valor']\n   - $casts = ['tipo' => TipoContato::class]\n   - Relacionamento belongsTo: public function usuario(): BelongsTo { return $this->belongsTo(User::class, 'usuario_id'); }\n4. Atualizar User model:\n   - Relacionamento hasMany: public function contatos(): HasMany { return $this->hasMany(Contato::class, 'usuario_id'); }\n5. Criar factory ContatoFactory com tipos aleatórios (email/telefone).\n6. Criar seeder ContatoSeeder gerando 3-5 contatos por usuário.\n7. Executar: php artisan migrate\n\nEnum TipoContato:\nnamespace App\\Enums;\nenum TipoContato: string {\n    case Email = 'email';\n    case Telefone = 'telefone';\n}",
+        "testStrategy": "Executar migration sem erros. Rodar seeder. Validar via tinker: Contato::count() > 0, User::first()->contatos retorna collection, Contato::first()->usuario retorna User. Verificar enum casting funcionando.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar enum TipoContato com cases Email e Telefone",
+            "description": "Criar enum backed TipoContato (PHP 8.1+) com cases para Email e Telefone seguindo convenção TitleCase do Laravel",
+            "dependencies": [],
+            "details": "Executar comando: php artisan make:enum TipoContato. Editar arquivo app/Enums/TipoContato.php para criar enum backed string com: namespace App\\Enums; enum TipoContato: string { case Email = 'email'; case Telefone = 'telefone'; }. Seguir convenção Laravel de TitleCase para nomes dos cases.",
+            "status": "pending",
+            "testStrategy": "Validar via tinker: use App\\Enums\\TipoContato; TipoContato::Email->value === 'email'; TipoContato::Telefone->value === 'telefone'. Verificar arquivo criado em app/Enums/TipoContato.php."
+          },
+          {
+            "id": 2,
+            "title": "Criar migration create_contatos_table com FK e cascade",
+            "description": "Criar migration para tabela contatos com chave estrangeira para users e deleção em cascata",
+            "dependencies": [
+              1
+            ],
+            "details": "Executar: php artisan make:migration create_contatos_table. Editar migration com Schema: $table->id(); $table->foreignId('usuario_id')->constrained('users')->cascadeOnDelete(); $table->string('tipo'); $table->string('valor'); $table->timestamps(); $table->index('usuario_id'). Garantir FK com cascadeOnDelete para manter integridade referencial.",
+            "status": "pending",
+            "testStrategy": "Executar php artisan migrate sem erros. Verificar via database-schema tool que tabela contatos possui colunas corretas, FK usuario_id apontando para users com ON DELETE CASCADE, e índice em usuario_id."
+          },
+          {
+            "id": 3,
+            "title": "Criar model Contato com fillable, casts e belongsTo",
+            "description": "Criar model Eloquent Contato com configuração de campos preenchíveis, casting para enum e relacionamento belongsTo com User",
+            "dependencies": [
+              2
+            ],
+            "details": "Executar: php artisan make:model Contato. Editar app/Models/Contato.php: use App\\Enums\\TipoContato; use Illuminate\\Database\\Eloquent\\Relations\\BelongsTo; protected $fillable = ['usuario_id', 'tipo', 'valor']; protected $casts = ['tipo' => TipoContato::class]; public function usuario(): BelongsTo { return $this->belongsTo(User::class, 'usuario_id'); }. Importar classes necessárias.",
+            "status": "pending",
+            "testStrategy": "Validar via tinker: criar contato manual com Contato::create(['usuario_id' => 1, 'tipo' => 'email', 'valor' => 'test@test.com']); verificar $contato->tipo instanceof TipoContato; verificar $contato->usuario retorna instância User."
+          },
+          {
+            "id": 4,
+            "title": "Adicionar relacionamento hasMany no model User",
+            "description": "Atualizar model User para incluir relacionamento hasMany com Contato, estabelecendo relação bidirecional 1:N",
+            "dependencies": [
+              3
+            ],
+            "details": "Editar app/Models/User.php. Adicionar use Illuminate\\Database\\Eloquent\\Relations\\HasMany; no topo. Criar método: public function contatos(): HasMany { return $this->hasMany(Contato::class, 'usuario_id'); }. Garantir nome FK correto (usuario_id) para manter consistência com migration.",
+            "status": "pending",
+            "testStrategy": "Validar via tinker: $user = User::first(); $user->contatos retorna collection vazia ou populada; $user->contatos()->create(['tipo' => 'email', 'valor' => 'novo@test.com']) cria contato associado; verificar relacionamento bidirecional funcionando."
+          },
+          {
+            "id": 5,
+            "title": "Criar ContatoFactory gerando tipos aleatórios",
+            "description": "Implementar factory para model Contato gerando emails e telefones faker baseados em tipo aleatório do enum",
+            "dependencies": [
+              3
+            ],
+            "details": "Executar: php artisan make:factory ContatoFactory. Editar database/factories/ContatoFactory.php: use App\\Enums\\TipoContato; use App\\Models\\User; public function definition(): array { $tipo = fake()->randomElement(TipoContato::cases()); return ['usuario_id' => User::factory(), 'tipo' => $tipo, 'valor' => $tipo === TipoContato::Email ? fake()->unique()->safeEmail() : fake()->unique()->phoneNumber()]; }. Garantir valores compatíveis com tipo escolhido.",
+            "status": "pending",
+            "testStrategy": "Executar via tinker: Contato::factory()->count(10)->create(); verificar mix de emails e telefones; validar formato emails válido; verificar todos contatos possuem usuario_id válido; confirmar tipo enum correto."
+          },
+          {
+            "id": 6,
+            "title": "Criar ContatoSeeder gerando 3-5 contatos por usuário",
+            "description": "Implementar seeder para popular tabela contatos com 3-5 registros por usuário existente na base",
+            "dependencies": [
+              5
+            ],
+            "details": "Executar: php artisan make:seeder ContatoSeeder. Editar database/seeders/ContatoSeeder.php: use App\\Models\\User; use App\\Models\\Contato; public function run(): void { User::all()->each(function ($user) { Contato::factory()->count(rand(3, 5))->create(['usuario_id' => $user->id]); }); }. Adicionar ContatoSeeder no DatabaseSeeder após UserSeeder.",
+            "status": "pending",
+            "testStrategy": "Executar php artisan db:seed --class=ContatoSeeder. Validar via tinker: Contato::count() >= User::count() * 3; User::all()->each(fn($u) => assert($u->contatos->count() >= 3 && $u->contatos->count() <= 5)). Verificar distribuição aleatória de tipos."
+          },
+          {
+            "id": 7,
+            "title": "Executar migration e validar relacionamentos via tinker",
+            "description": "Rodar migrations, seeders e validar completude da implementação testando relacionamentos bidirecionais e casting de enum",
+            "dependencies": [
+              2,
+              4,
+              6
+            ],
+            "details": "Executar: php artisan migrate:fresh --seed. Validar via tinker: 1) Contato::count() > 0; 2) $user = User::first(); $user->contatos retorna collection; 3) $contato = Contato::first(); $contato->usuario retorna User; 4) $contato->tipo instanceof TipoContato::class; 5) Testar eager loading: User::with('contatos')->first(). Documentar resultados.",
+            "status": "pending",
+            "testStrategy": "Executar comandos tinker documentados. Verificar zero erros SQL. Confirmar relacionamentos bidirecionais funcionais. Validar enum casting automático. Testar cascadeOnDelete deletando usuário e verificando contatos deletados automaticamente."
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Criar Filament Resource para gerenciamento de Usuários",
+        "description": "Implementar CRUD completo de usuários usando Filament Resources com listagem, formulário e visualização",
+        "details": "1. Criar resource: php artisan make:filament-resource User --generate\n2. Configurar UserResource.php:\n   - form(): TextInput para 'nome' (required), 'email' (email, unique), DatePicker para 'data_nascimento'\n   - table(): Columns para nome, email, data_nascimento (date format d/m/Y), created_at\n   - Adicionar filtros: Filter por data_nascimento (range)\n   - Actions: EditAction, DeleteAction\n   - BulkActions: DeleteBulkAction\n3. Configurar RelationManager para contatos (será criado na task 6).\n4. Adicionar searchable em nome e email na table.\n5. Configurar paginação: defaultPaginationPageOption(25)\n6. Traduzir labels para português.\n7. Adicionar validação no form: email único ignorando registro atual em edição.\n\nForm schema exemplo:\nTextInput::make('nome')->required()->maxLength(255)\nTextInput::make('email')->email()->required()->unique(ignoreRecord: true)\nDatePicker::make('data_nascimento')->displayFormat('d/m/Y')->native(false)",
+        "testStrategy": "Acessar /admin/users. Criar novo usuário, validar salvamento. Editar usuário, validar update. Deletar usuário, confirmar remoção. Testar busca por nome/email. Validar filtros funcionando. Verificar paginação.",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Gerar UserResource usando Artisan CLI",
+            "description": "Executar comando Artisan para criar estrutura inicial do Filament Resource para modelo User com scaffolding automático",
+            "dependencies": [],
+            "details": "Executar `php artisan make:filament-resource User --generate` para criar app/Filament/Resources/UserResource.php com estrutura base (form, table, pages). Flag --generate cria automaticamente estrutura inicial baseada no modelo. Verificar criação de UserResource.php, pages/ListUsers.php, pages/CreateUser.php, pages/EditUser.php em app/Filament/Resources/UserResource/Pages/",
+            "status": "pending",
+            "testStrategy": "Verificar existência dos arquivos gerados em app/Filament/Resources/ e confirmar que /admin/users carrega sem erros (mesmo vazio)"
+          },
+          {
+            "id": 2,
+            "title": "Configurar form schema com campos nome, email e data_nascimento",
+            "description": "Implementar método form() no UserResource com TextInput para nome/email e DatePicker para data_nascimento incluindo todas as validações necessárias",
+            "dependencies": [
+              1
+            ],
+            "details": "Editar UserResource::form() adicionando: TextInput::make('nome')->required()->maxLength(255), TextInput::make('email')->email()->required()->unique(ignoreRecord: true)->maxLength(255), DatePicker::make('data_nascimento')->displayFormat('d/m/Y')->native(false). Validação email unique deve ignorar registro atual em edições. DatePicker com formato brasileiro e sem input nativo do browser",
+            "status": "pending",
+            "testStrategy": "Acessar /admin/users/create, validar campos renderizando. Tentar criar usuário sem nome (deve bloquear). Tentar email duplicado em edição (deve permitir manter mesmo email). Validar formato data exibido como dd/mm/yyyy"
+          },
+          {
+            "id": 3,
+            "title": "Configurar table schema com colunas e formatação de datas",
+            "description": "Implementar método table() no UserResource com colunas para nome, email, data_nascimento formatada e created_at",
+            "dependencies": [
+              1
+            ],
+            "details": "Editar UserResource::table() adicionando: TextColumn::make('nome')->sortable()->searchable(), TextColumn::make('email')->sortable()->searchable(), TextColumn::make('data_nascimento')->date('d/m/Y')->sortable(), TextColumn::make('created_at')->dateTime('d/m/Y H:i')->sortable(). Aplicar formato brasileiro (d/m/Y) para data_nascimento e datetime para created_at",
+            "status": "pending",
+            "testStrategy": "Acessar /admin/users, verificar colunas exibindo dados corretos. Validar datas formatadas em dd/mm/yyyy. Testar ordenação clicando nos headers das colunas"
+          },
+          {
+            "id": 4,
+            "title": "Adicionar filtro por range de data_nascimento",
+            "description": "Implementar filtro customizado na tabela para permitir busca por intervalo de datas de nascimento",
+            "dependencies": [
+              3
+            ],
+            "details": "Editar UserResource::table()->filters() adicionando Filter::make('data_nascimento')->form([DatePicker::make('de')->label('De'), DatePicker::make('ate')->label('Até')])->query(function (Builder $query, array $data) { return $query->when($data['de'], fn ($q) => $q->whereDate('data_nascimento', '>=', $data['de']))->when($data['ate'], fn ($q) => $q->whereDate('data_nascimento', '<=', $data['ate'])); }). Filtro com dois DatePickers (de/até) aplicando whereDate na query",
+            "status": "pending",
+            "testStrategy": "Acessar /admin/users, abrir filtros, selecionar range de datas. Validar que apenas usuários dentro do range aparecem. Testar filtro apenas com 'de', apenas com 'até', e ambos preenchidos"
+          },
+          {
+            "id": 5,
+            "title": "Configurar actions e bulk actions na tabela",
+            "description": "Adicionar ações individuais (Edit, Delete) e ações em lote (DeleteBulkAction) na listagem de usuários",
+            "dependencies": [
+              3
+            ],
+            "details": "Editar UserResource::table()->actions([Tables\\Actions\\EditAction::make(), Tables\\Actions\\DeleteAction::make()]) e ->bulkActions([Tables\\Actions\\BulkActionGroup::make([Tables\\Actions\\DeleteBulkAction::make()])]). EditAction abre modal/página de edição, DeleteAction exibe confirmação antes de deletar, DeleteBulkAction permite deletar múltiplos registros selecionados",
+            "status": "pending",
+            "testStrategy": "Acessar /admin/users. Clicar em Edit em um usuário, validar abertura do formulário. Clicar Delete, confirmar modal de confirmação. Selecionar múltiplos usuários via checkbox, executar Delete bulk action e confirmar remoção em lote"
+          },
+          {
+            "id": 6,
+            "title": "Adicionar searchable e configurar paginação",
+            "description": "Habilitar busca global por nome e email e configurar paginação padrão de 25 registros por página",
+            "dependencies": [
+              3
+            ],
+            "details": "Campos nome e email já tem ->searchable() nas colunas (subtask 3). Adicionar UserResource::table()->defaultPaginationPageOption(25) para definir 25 registros por página como padrão. Searchable permite busca global no topo da tabela filtrando por nome OU email",
+            "status": "pending",
+            "testStrategy": "Acessar /admin/users com mais de 25 usuários, verificar paginação exibindo 25 por página. Usar campo de busca global digitando nome parcial, validar filtro funcionando. Buscar por email, validar resultado correto"
+          },
+          {
+            "id": 7,
+            "title": "Traduzir labels e mensagens para português brasileiro",
+            "description": "Aplicar traduções pt_BR em todos os labels do formulário, colunas da tabela e mensagens de validação/confirmação",
+            "dependencies": [
+              2,
+              3,
+              4,
+              5
+            ],
+            "details": "Adicionar ->label() em todos os campos: nome->label('Nome'), email->label('E-mail'), data_nascimento->label('Data de Nascimento'). Colunas da table também precisam ->label(). Publicar traduções Filament se necessário: php artisan vendor:publish --tag=filament-translations. Verificar lang/pt_BR/filament.php para mensagens de erro e confirmação. Garantir mensagens de Delete, validações e filtros em português",
+            "status": "pending",
+            "testStrategy": "Navegar por /admin/users em todas as telas (create, edit, list). Validar todos labels, placeholders, botões e mensagens em português. Disparar erro de validação (email duplicado) e confirmar mensagem em pt_BR. Executar delete e verificar modal em português"
+          },
+          {
+            "id": 8,
+            "title": "Testar CRUD completo via interface administrativa",
+            "description": "Executar teste manual completo de todas as funcionalidades: criar, listar, editar, deletar usuários, validar busca, filtros e paginação",
+            "dependencies": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "details": "1) Acessar /admin/users e criar novo usuário preenchendo nome, email válido, data_nascimento - validar salvamento. 2) Editar usuário criado alterando nome - validar update. 3) Tentar editar mantendo mesmo email - validar que permite (ignoreRecord). 4) Criar segundo usuário com email já existente - validar bloqueio. 5) Buscar usuário por nome parcial - validar resultado. 6) Aplicar filtro de data_nascimento - validar filtragem. 7) Testar paginação navegando entre páginas. 8) Deletar usuário individual - confirmar remoção. 9) Selecionar múltiplos e deletar em lote - confirmar",
+            "status": "pending",
+            "testStrategy": "Checklist completo: ✓ Create com validações, ✓ Read com busca/filtros/paginação, ✓ Update mantendo email, ✓ Delete individual e bulk, ✓ Todas mensagens em pt_BR, ✓ Formato datas brasileiro, ✓ Email unique bloqueando duplicatas em create"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Criar Filament Resource para gerenciamento de Contatos",
+        "description": "Implementar CRUD completo de contatos usando Filament Resources com suporte a tipos (email/telefone) e associação com usuários",
+        "details": "1. Criar resource: php artisan make:filament-resource Contato --generate\n2. Configurar ContatoResource.php:\n   - form():\n     - Select::make('usuario_id')->relationship('usuario', 'nome')->searchable()->required()\n     - Select::make('tipo')->options(['email' => 'Email', 'telefone' => 'Telefone'])->required()->native(false)\n     - TextInput::make('valor')->required()->maxLength(255)\n       - Validação condicional: email quando tipo=email, telefone BR quando tipo=telefone\n   - table():\n     - TextColumn usuario.nome, tipo (badge), valor\n     - Filtros: SelectFilter por tipo, SelectFilter por usuario_id\n   - Actions: EditAction, DeleteAction\n3. Adicionar validação customizada no form:\n   - Rules condicionais baseadas em tipo (email válido ou telefone brasileiro)\n4. Criar RelationManager em UserResource: php artisan make:filament-relation-manager UserResource contatos valor\n   - Configurar form e table inline para gerenciar contatos do usuário.\n5. Traduzir labels.\n\nValidação condicional:\n->rules(fn (Get $get) => $get('tipo') === 'email' ? ['email'] : ['regex:/^\\(?\\d{2}\\)?[\\s-]?9?\\d{4}-?\\d{4}$/'])",
+        "testStrategy": "Acessar /admin/contatos. Criar contato email, validar formato email. Criar contato telefone, validar formato. Testar filtros por tipo e usuário. Acessar página de usuário, validar RelationManager exibindo contatos. Criar/editar/deletar contato via RelationManager.",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar ContatoResource usando Filament generator",
+            "description": "Executar comando artisan para gerar o resource base de Contato com estrutura inicial de form, table e pages",
+            "dependencies": [],
+            "details": "Executar: php artisan make:filament-resource Contato --generate. Isso criará app/Filament/Resources/ContatoResource.php com estrutura básica de form(), table() e getPages(). Verificar arquivos gerados em app/Filament/Resources/ContatoResource/Pages/. Não modificar ainda, apenas gerar estrutura.",
+            "status": "pending",
+            "testStrategy": "Verificar que arquivo ContatoResource.php foi criado em app/Filament/Resources/ e que páginas List, Create, Edit foram geradas em ContatoResource/Pages/. Acessar /admin/contatos deve exibir tela vazia sem erros."
+          },
+          {
+            "id": 2,
+            "title": "Configurar form() com Select usuario_id searchable e Select tipo enum",
+            "description": "Implementar campos Select para relacionamento com usuário (searchable) e Select para tipo de contato (email/telefone) no método form() do ContatoResource",
+            "dependencies": [
+              1
+            ],
+            "details": "No ContatoResource::form(), adicionar: Select::make('usuario_id')->relationship('usuario', 'nome')->searchable()->required()->label('Usuário'). Depois: Select::make('tipo')->options(['email' => 'Email', 'telefone' => 'Telefone'])->required()->native(false)->label('Tipo de Contato'). Importar use Filament\\Forms\\Components\\Select. Relacionamento 'usuario' deve existir no model Contato (task 4 dependency).",
+            "status": "pending",
+            "testStrategy": "Acessar /admin/contatos/create. Verificar campo Usuário com busca funcionando, listando usuários cadastrados. Verificar campo Tipo exibindo opções Email/Telefone como custom select (não native). Tentar salvar sem preencher, validar mensagens de required."
+          },
+          {
+            "id": 3,
+            "title": "Implementar TextInput valor com validação condicional dinâmica",
+            "description": "Adicionar campo TextInput para valor do contato com validação condicional que muda entre email e telefone brasileiro baseado no tipo selecionado",
+            "dependencies": [
+              2
+            ],
+            "details": "No form(), adicionar: TextInput::make('valor')->required()->maxLength(255)->label('Valor')->rules(fn (Get $get) => $get('tipo') === 'email' ? ['email'] : ['regex:/^\\(?\\d{2}\\)?[\\s-]?9?\\d{4}-?\\d{4}$/']). Importar use Filament\\Forms\\Get. Regex valida telefone BR formato (XX) 9XXXX-XXXX ou variações. Validação executa dinamicamente quando tipo muda.",
+            "status": "pending",
+            "testStrategy": "Criar contato tipo Email, inserir valor inválido (não email), validar erro. Inserir email válido, salvar com sucesso. Criar contato tipo Telefone, inserir 'texto', validar erro regex. Inserir (11) 98765-4321, salvar com sucesso. Testar formatos: 11987654321, (11)987654321, 11 98765-4321."
+          },
+          {
+            "id": 4,
+            "title": "Configurar table() com TextColumn usuario.nome e badge tipo",
+            "description": "Implementar colunas da tabela de listagem com relacionamento eager loaded para usuário e badge visual para tipo de contato",
+            "dependencies": [
+              1
+            ],
+            "details": "No ContatoResource::table(), configurar: TextColumn::make('usuario.nome')->label('Usuário')->sortable()->searchable(), TextColumn::make('tipo')->badge()->color(fn (string $state): string => match ($state) { 'email' => 'info', 'telefone' => 'success' })->formatStateUsing(fn (string $state): string => ucfirst($state)), TextColumn::make('valor')->label('Valor')->searchable()->copyable(). Importar use Filament\\Tables\\Columns\\TextColumn. Eager load: modifyQueryUsing(fn ($query) => $query->with('usuario')).",
+            "status": "pending",
+            "testStrategy": "Acessar /admin/contatos com contatos cadastrados. Verificar coluna Usuário exibindo nome (não ID). Badge tipo deve ter cor azul (email) ou verde (telefone). Verificar searchable funcionando em nome usuário e valor. Testar ordenação por usuário. Verificar ícone copy em valor."
+          },
+          {
+            "id": 5,
+            "title": "Adicionar filtros SelectFilter para tipo e usuario_id",
+            "description": "Implementar filtros na tabela para permitir filtragem por tipo de contato e por usuário específico",
+            "dependencies": [
+              4
+            ],
+            "details": "No ContatoResource::table(), adicionar filters([SelectFilter::make('tipo')->options(['email' => 'Email', 'telefone' => 'Telefone'])->label('Tipo'), SelectFilter::make('usuario_id')->relationship('usuario', 'nome')->searchable()->label('Usuário')->multiple()]). Importar use Filament\\Tables\\Filters\\SelectFilter. Filtro tipo permite selecionar um, filtro usuário permite múltiplos com busca.",
+            "status": "pending",
+            "testStrategy": "Acessar /admin/contatos. Clicar no ícone filtros. Selecionar filtro Tipo=Email, verificar apenas contatos email exibidos. Limpar filtro. Selecionar filtro Usuário (buscar nome), verificar apenas contatos daquele usuário. Testar combinação de filtros tipo+usuário. Limpar todos filtros."
+          },
+          {
+            "id": 6,
+            "title": "Configurar Actions EditAction e DeleteAction na tabela",
+            "description": "Adicionar ações de edição e exclusão nas linhas da tabela de contatos",
+            "dependencies": [
+              4
+            ],
+            "details": "No ContatoResource::table(), configurar actions([Tables\\Actions\\EditAction::make(), Tables\\Actions\\DeleteAction::make()]). Importar use Filament\\Tables\\Actions. DeleteAction já inclui confirmação modal automaticamente. EditAction abre modal de edição inline ou redireciona para página edit conforme configuração de pages.",
+            "status": "pending",
+            "testStrategy": "Acessar /admin/contatos. Verificar ícones de editar (lápis) e deletar (lixeira) em cada linha. Clicar editar, verificar form de edição abrindo. Alterar valor, salvar, verificar atualização. Clicar deletar, confirmar modal, verificar contato removido da listagem."
+          },
+          {
+            "id": 7,
+            "title": "Criar RelationManager de contatos para UserResource",
+            "description": "Gerar RelationManager para gerenciar contatos inline na página de visualização/edição de usuário",
+            "dependencies": [
+              6
+            ],
+            "details": "Executar: php artisan make:filament-relation-manager UserResource contatos valor. Isso cria app/Filament/Resources/UserResource/RelationManagers/ContatosRelationManager.php. 'contatos' é nome do relacionamento no model User, 'valor' é campo título da tabela. Arquivo base será gerado, próximo subtask configura form/table.",
+            "status": "pending",
+            "testStrategy": "Verificar arquivo ContatosRelationManager.php criado em app/Filament/Resources/UserResource/RelationManagers/. Não acessar ainda interface, apenas confirmar geração. Arquivo deve ter métodos form() e table() vazios/base."
+          },
+          {
+            "id": 8,
+            "title": "Configurar form e table inline no ContatosRelationManager",
+            "description": "Implementar formulário e tabela do RelationManager para permitir CRUD de contatos diretamente na página do usuário",
+            "dependencies": [
+              7
+            ],
+            "details": "No ContatosRelationManager::form(), adicionar: Select::make('tipo')->options(['email' => 'Email', 'telefone' => 'Telefone'])->required()->native(false), TextInput::make('valor')->required()->maxLength(255)->rules(fn (Get $get) => $get('tipo') === 'email' ? ['email'] : ['regex:/^\\(?\\d{2}\\)?[\\s-]?9?\\d{4}-?\\d{4}$/']). Remover campo usuario_id (inferido pelo relacionamento). No table(), adicionar: TextColumn tipo (badge), TextColumn valor (copyable). Em UserResource, adicionar getRelations(): [ContatosRelationManager::class].",
+            "status": "pending",
+            "testStrategy": "Acessar /admin/users, editar usuário. Verificar aba 'Contatos' aparecendo. Clicar aba, ver tabela de contatos do usuário. Criar novo contato inline (sem selecionar usuário), validar tipo/valor. Editar contato existente via RelationManager. Deletar contato. Verificar validações condicionais funcionando."
+          },
+          {
+            "id": 9,
+            "title": "Testar CRUD completo, validações condicionais e RelationManager",
+            "description": "Executar bateria de testes manuais para validar todas as funcionalidades do ContatoResource e integração com UserResource",
+            "dependencies": [
+              8
+            ],
+            "details": "1) CRUD direto: Criar contato email válido/inválido, telefone válido/inválido em /admin/contatos. 2) Filtros: Testar filtros tipo e usuário combinados. 3) Busca: Buscar por valor e nome usuário. 4) RelationManager: Acessar /admin/users/X/edit, aba Contatos, criar/editar/deletar inline. 5) Validar N+1 resolvido (usuario.nome sem queries extras). 6) Testar badges cores corretas. 7) Copiar valor funcional. 8) Validar traduções labels em português.",
+            "status": "pending",
+            "testStrategy": "Checklist completo: ✓ Criar email válido, ✓ Rejeitar email inválido, ✓ Criar telefone formato variado, ✓ Rejeitar telefone inválido, ✓ Filtro tipo=email, ✓ Filtro usuário múltiplo, ✓ Busca por valor, ✓ EditAction funcional, ✓ DeleteAction com confirmação, ✓ RelationManager aba visível, ✓ Criar contato via RM, ✓ Editar via RM, ✓ Deletar via RM, ✓ Badge cores, ✓ Copyable valor, ✓ Labels português. Sucesso se todos ✓."
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Criar Dashboard Filament com widgets de métricas",
+        "description": "Implementar dashboard administrativo com contadores de usuários/contatos e gráficos de distribuição",
+        "details": "1. Criar widgets de estatísticas: php artisan make:filament-widget UsersOverview --stats\n   - StatsOverviewWidget com cards:\n     - Total de usuários: User::count()\n     - Total de contatos: Contato::count()\n     - Média de contatos por usuário: Contato::count() / User::count()\n   - Icons e cores: heroicon-o-users, heroicon-o-phone, heroicon-o-chart-bar\n2. Criar widget de gráfico: php artisan make:filament-widget ContatosPorTipoChart --chart\n   - ChartWidget tipo Pie\n   - Dados: ['Email' => Contato::where('tipo', 'email')->count(), 'Telefone' => Contato::where('tipo', 'telefone')->count()]\n   - Cores: ['#10b981', '#3b82f6']\n3. Registrar widgets no AdminPanelProvider:\n   ->widgets([UsersOverview::class, ContatosPorTipoChart::class])\n4. Configurar layout de 2 colunas no dashboard.\n5. Adicionar atualização em tempo real (polling: '30s').\n\nWidget exemplo:\nprotected function getStats(): array {\n    return [\n        Stat::make('Total de Usuários', User::count())->icon('heroicon-o-users'),\n        Stat::make('Total de Contatos', Contato::count())->icon('heroicon-o-phone'),\n    ];\n}",
+        "testStrategy": "Acessar /admin. Verificar widgets carregando dados corretos. Criar novo usuário/contato, atualizar página, validar contadores incrementando. Verificar gráfico pie exibindo distribuição correta. Testar responsividade em mobile.",
+        "priority": "low",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar widget UsersOverview com StatsOverviewWidget",
+            "description": "Gerar widget de estatísticas usando comando artisan e configurar classe base StatsOverviewWidget",
+            "dependencies": [],
+            "details": "Executar `php artisan make:filament-widget UsersOverview --stats` para criar o widget. Verificar que a classe UsersOverview extends Filament\\Widgets\\StatsOverviewWidget. Configurar propriedade protegida $heading = 'Visão Geral de Usuários'. Preparar estrutura para método getStats() que retornará array de Stat objects.",
+            "status": "pending",
+            "testStrategy": "Verificar que arquivo app/Filament/Widgets/UsersOverview.php foi criado corretamente e extends StatsOverviewWidget"
+          },
+          {
+            "id": 2,
+            "title": "Configurar cards de estatísticas com contadores e média",
+            "description": "Implementar método getStats() com três cards: total de usuários, total de contatos e média de contatos por usuário",
+            "dependencies": [
+              1
+            ],
+            "details": "No widget UsersOverview, implementar método protected function getStats(): array retornando array com: Stat::make('Total de Usuários', User::count()), Stat::make('Total de Contatos', Contato::count()), Stat::make('Média de Contatos', number_format(User::count() > 0 ? Contato::count() / User::count() : 0, 2)). Adicionar use statements para User, Contato models e Filament\\Widgets\\StatsOverviewWidget\\Stat. Implementar validação de divisão por zero usando ternário.",
+            "status": "pending",
+            "testStrategy": "Criar usuários e contatos de teste, acessar dashboard e validar cálculos corretos. Testar com zero usuários para confirmar que não gera erro de divisão por zero"
+          },
+          {
+            "id": 3,
+            "title": "Adicionar ícones heroicons e cores aos cards",
+            "description": "Estilizar os três cards de estatísticas com ícones heroicons e cores apropriadas",
+            "dependencies": [
+              2
+            ],
+            "details": "Atualizar cada Stat::make() adicionando ->icon(): card de usuários com ->icon('heroicon-o-users')->color('primary'), card de contatos com ->icon('heroicon-o-phone')->color('success'), card de média com ->icon('heroicon-o-chart-bar')->color('warning'). Verificar que ícones renderizam corretamente no dashboard. Consultar documentação Filament v4 para cores disponíveis (primary, success, warning, danger, info, gray).",
+            "status": "pending",
+            "testStrategy": "Acessar dashboard e verificar visualmente que os três cards exibem ícones heroicons corretos e cores distintas"
+          },
+          {
+            "id": 4,
+            "title": "Criar widget ContatosPorTipoChart com ChartWidget Pie",
+            "description": "Gerar widget de gráfico tipo pizza para visualizar distribuição de contatos por tipo",
+            "dependencies": [],
+            "details": "Executar `php artisan make:filament-widget ContatosPorTipoChart --chart` para criar widget de gráfico. Configurar classe ContatosPorTipoChart extends ChartWidget. Definir propriedade protected static ?string $heading = 'Distribuição de Contatos por Tipo'. Configurar protected static string $type = 'pie' para tipo de gráfico pizza. Preparar estrutura para métodos getType() e getData().",
+            "status": "pending",
+            "testStrategy": "Verificar que arquivo app/Filament/Widgets/ContatosPorTipoChart.php foi criado e extends ChartWidget com tipo pie configurado"
+          },
+          {
+            "id": 5,
+            "title": "Configurar dados do gráfico com queries por tipo e cores",
+            "description": "Implementar método getData() com queries de contatos por tipo email/telefone e definir cores do gráfico",
+            "dependencies": [
+              4
+            ],
+            "details": "No widget ContatosPorTipoChart, implementar protected function getData(): array retornando estrutura: ['datasets' => [['label' => 'Contatos por Tipo', 'data' => [Contato::where('tipo', 'email')->count(), Contato::where('tipo', 'telefone')->count()], 'backgroundColor' => ['#10b981', '#3b82f6']]], 'labels' => ['Email', 'Telefone']]. Adicionar use statement para model Contato. Validar estrutura de retorno seguindo documentação Chart.js usada pelo Filament.",
+            "status": "pending",
+            "testStrategy": "Criar contatos de teste com tipos email e telefone, acessar dashboard e validar que gráfico pie exibe proporção correta com cores verde (#10b981) para email e azul (#3b82f6) para telefone"
+          },
+          {
+            "id": 6,
+            "title": "Registrar widgets no AdminPanelProvider e configurar polling",
+            "description": "Adicionar ambos widgets ao painel administrativo, configurar layout de 2 colunas e habilitar atualização automática a cada 30 segundos",
+            "dependencies": [
+              3,
+              5
+            ],
+            "details": "Editar app/Providers/Filament/AdminPanelProvider.php. No método panel(), adicionar ->widgets([UsersOverview::class, ContatosPorTipoChart::class]). Configurar UsersOverview com propriedade protected static ?int $columnSpan = 'full' para ocupar largura completa. Adicionar propriedade protected static ?string $pollingInterval = '30s' em ambos widgets para atualização automática. Adicionar use statements para ambas classes de widget. Executar php artisan filament:cache-components para limpar cache. Testar dashboard acessando /admin.",
+            "status": "pending",
+            "testStrategy": "Acessar /admin e verificar que ambos widgets aparecem no dashboard. Criar novo usuário/contato em outra aba, aguardar 30 segundos e validar que contadores atualizam automaticamente. Testar responsividade em tela mobile verificando layout adaptativo"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Implementar validações de negócio e regras adicionais",
+        "description": "Adicionar validações customizadas, observers e políticas para garantir integridade dos dados",
+        "details": "1. Criar Form Requests customizados:\n   - php artisan make:request StoreUserRequest\n   - php artisan make:request StoreContatoRequest\n   - Validações: email único para usuários, valor único por tipo por usuário para contatos\n2. Criar Observer para Contato: php artisan make:observer ContatoObserver --model=Contato\n   - creating(): normalizar valor (trim, lowercase para email)\n   - Registrar em AppServiceProvider\n3. Adicionar políticas de acesso (opcional, se necessário controle):\n   - php artisan make:policy UserPolicy --model=User\n   - php artisan make:policy ContatoPolicy --model=Contato\n4. Validar regras:\n   - Usuário não pode ter emails duplicados em contatos\n   - Data nascimento não pode ser futura\n   - Telefone formato brasileiro (XX) 9XXXX-XXXX\n5. Adicionar mensagens de validação traduzidas em pt_BR.\n\nObserver exemplo:\npublic function creating(Contato $contato): void {\n    $contato->valor = trim($contato->valor);\n    if ($contato->tipo === TipoContato::Email) {\n        $contato->valor = strtolower($contato->valor);\n    }\n}",
+        "testStrategy": "Criar usuário com data futura, validar erro. Criar contato com email inválido, validar erro. Criar 2 contatos email iguais para mesmo usuário, validar bloqueio. Verificar normalização de emails (uppercase → lowercase). Testar telefone com formatos variados.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar StoreUserRequest com validações de usuário",
+            "description": "Implementar Form Request customizado para validação de criação e atualização de usuários, incluindo regras para email único e data de nascimento não futura",
+            "dependencies": [],
+            "details": "Executar `php artisan make:request StoreUserRequest`. Implementar método rules() com validações: 'nome' => 'required|string|max:255', 'email' => 'required|email|unique:users,email', 'data_nascimento' => 'nullable|date|before_or_equal:today'. Adicionar método authorize() retornando true. Criar mensagens customizadas em pt_BR no método messages() para erros como 'data_nascimento.before_or_equal' => 'A data de nascimento não pode ser futura'.",
+            "status": "pending",
+            "testStrategy": "Testar via tinker simulando request com data futura, validar retorno de erro. Testar email duplicado, validar bloqueio. Validar mensagens em português."
+          },
+          {
+            "id": 2,
+            "title": "Criar StoreContatoRequest com validação de valor único por tipo",
+            "description": "Implementar Form Request para contatos com regra customizada garantindo que o valor seja único por tipo por usuário",
+            "dependencies": [],
+            "details": "Executar `php artisan make:request StoreContatoRequest`. Implementar rules() com validações: 'tipo' => 'required|in:email,telefone', 'valor' => ['required', 'string', Rule::unique('contatos')->where('tipo', request('tipo'))->where('usuario_id', request('usuario_id'))], 'usuario_id' => 'required|exists:users,id'. Para telefone, adicionar regex brasileiro: 'valor' => 'regex:/^\\(\\d{2}\\)\\s9\\d{4}-\\d{4}$/'. Mensagens pt_BR: 'valor.unique' => 'Este contato já existe para este usuário', 'valor.regex' => 'Telefone deve estar no formato (XX) 9XXXX-XXXX'.",
+            "status": "pending",
+            "testStrategy": "Criar 2 contatos email iguais para mesmo usuário, validar bloqueio. Testar telefone com formatos inválidos, validar regex. Testar telefone válido (11) 98765-4321."
+          },
+          {
+            "id": 3,
+            "title": "Criar ContatoObserver para normalização automática de dados",
+            "description": "Implementar Observer para modelo Contato que normalize valores automaticamente (trim, lowercase para emails) no evento creating",
+            "dependencies": [],
+            "details": "Executar `php artisan make:observer ContatoObserver --model=Contato`. Implementar método creating(Contato $contato): void { $contato->valor = trim($contato->valor); if ($contato->tipo === TipoContato::Email) { $contato->valor = strtolower($contato->valor); } }. Considerar adicionar também updating() com mesma lógica para garantir consistência em edições. Garantir que TipoContato enum está importado corretamente.",
+            "status": "pending",
+            "testStrategy": "Criar contato com email 'TEST@EXAMPLE.COM  ', verificar via tinker que salvou como 'test@example.com'. Criar telefone com espaços, validar trim funcionando."
+          },
+          {
+            "id": 4,
+            "title": "Registrar ContatoObserver no AppServiceProvider",
+            "description": "Adicionar registro do ContatoObserver no método boot() do AppServiceProvider para ativar os eventos automáticos",
+            "dependencies": [
+              3
+            ],
+            "details": "Editar app/Providers/AppServiceProvider.php. No método boot(), adicionar: use App\\Models\\Contato; use App\\Observers\\ContatoObserver; public function boot(): void { Contato::observe(ContatoObserver::class); }. Garantir imports corretos no topo do arquivo. Verificar que não há outros observers conflitantes.",
+            "status": "pending",
+            "testStrategy": "Criar contato via factory ou tinker com valor não normalizado, verificar que observer executou trim/lowercase. Validar via User::factory()->has(Contato::factory()->count(3))->create()."
+          },
+          {
+            "id": 5,
+            "title": "Criar UserPolicy e ContatoPolicy para controle de acesso",
+            "description": "Implementar políticas de autorização para usuários e contatos, definindo permissões para viewAny, view, create, update, delete",
+            "dependencies": [],
+            "details": "Executar `php artisan make:policy UserPolicy --model=User` e `php artisan make:policy ContatoPolicy --model=Contato`. Implementar métodos básicos: viewAny, view, create, update, delete retornando true (ou lógica customizada se houver autenticação). Exemplo: public function delete(User $user, User $model): bool { return true; }. Registrar policies em AuthServiceProvider se necessário (Laravel 11+ registra automaticamente). Opcional: adicionar regra para que usuário só delete próprios contatos.",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 6,
+            "title": "Adicionar traduções de validação customizadas em pt_BR",
+            "description": "Criar arquivo de tradução para mensagens de validação personalizadas em português brasileiro",
+            "dependencies": [],
+            "details": "Criar/editar lang/pt_BR/validation.php (criar diretório pt_BR se não existir). Adicionar traduções customizadas: 'custom' => ['data_nascimento' => ['before_or_equal' => 'A data de nascimento não pode ser futura'], 'valor' => ['unique' => 'Este contato já existe para este tipo', 'regex' => 'O telefone deve estar no formato (XX) 9XXXX-XXXX'], 'email' => ['unique' => 'Este email já está cadastrado']]. Configurar config/app.php com 'locale' => 'pt_BR' se ainda não estiver.",
+            "status": "pending",
+            "testStrategy": "Forçar erro de validação (data futura, email duplicado), verificar mensagem retornada em português. Testar via Filament UI."
+          },
+          {
+            "id": 7,
+            "title": "Integrar Form Requests nos Filament Resources",
+            "description": "Substituir validações inline dos resources UserResource e ContatoResource pelos Form Requests customizados criados",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Editar app/Filament/Resources/UserResource.php: adicionar método público estático getFormRequest(): string { return StoreUserRequest::class; }. Repetir para ContatoResource retornando StoreContatoRequest::class. Remover validações inline dos campos do form() se existirem (required, unique, etc) pois serão tratadas pelo FormRequest. Garantir que Filament reconhece os FormRequests (funcionalidade nativa do Filament 3+).",
+            "status": "pending",
+            "testStrategy": "Acessar /admin/users, tentar criar usuário com email duplicado, validar erro do FormRequest. Criar contato com telefone inválido via /admin/contatos, validar mensagem pt_BR."
+          },
+          {
+            "id": 8,
+            "title": "Criar testes automatizados para validações e observers",
+            "description": "Implementar testes feature e unit cobrindo Form Requests, Observer e regras de validação customizadas",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4,
+              7
+            ],
+            "details": "Criar tests/Feature/ValidationTest.php: test_user_data_nascimento_nao_pode_ser_futura() validando StoreUserRequest rejeita datas futuras; test_contato_valor_unico_por_tipo_por_usuario() validando StoreContatoRequest bloqueia duplicados; test_contato_telefone_formato_brasileiro() validando regex. Criar tests/Unit/ContatoObserverTest.php: test_email_normalizado_lowercase() criando Contato::factory()->create(['tipo' => TipoContato::Email, 'valor' => 'TEST@EXAMPLE.COM']) e assertando $contato->fresh()->valor === 'test@example.com'. Usar RefreshDatabase trait.",
+            "status": "pending",
+            "testStrategy": "Executar `php artisan test --filter=ValidationTest` e `--filter=ContatoObserverTest`. Validar 100% dos testes passando. Verificar coverage cobrindo FormRequests e Observer."
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Criar testes automatizados (Feature e Unit)",
+        "description": "Implementar cobertura de testes para models, factories, relacionamentos e operações CRUD via Filament",
+        "details": "1. Testes de Model:\n   - tests/Unit/UserTest.php: testar relacionamento contatos, casts\n   - tests/Unit/ContatoTest.php: testar relacionamento usuario, enum casting\n2. Testes de Factory:\n   - tests/Unit/FactoryTest.php: validar UserFactory e ContatoFactory gerando dados válidos\n3. Testes de Feature para CRUD:\n   - tests/Feature/UserCrudTest.php: criar, listar, editar, deletar usuário\n   - tests/Feature/ContatoCrudTest.php: criar, listar, editar, deletar contato\n4. Testes de validação:\n   - tests/Feature/ValidationTest.php: email único, data futura, telefone formato\n5. Testes de Filament Resources:\n   - Usar Filament testing helpers: livewire(UserResource\\Pages\\CreateUser::class)\n   - Validar formulários, listagens, ações\n6. Configurar PHPUnit com RefreshDatabase.\n7. Executar: php artisan test --coverage (alvo: >80%)\n\nExemplo teste:\npublic function test_user_can_have_multiple_contacts(): void {\n    $user = User::factory()->create();\n    $contatos = Contato::factory()->count(3)->create(['usuario_id' => $user->id]);\n    $this->assertCount(3, $user->contatos);\n}",
+        "testStrategy": "Executar 'php artisan test' sem falhas. Validar coverage >80%. Testes devem cobrir: relacionamentos, factories, validações, CRUD via Filament, observers. Verificar RefreshDatabase funcionando.",
+        "priority": "medium",
+        "dependencies": [
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar tests/Unit/UserTest.php para testar relacionamentos e casts do model User",
+            "description": "Implementar testes unitários para validar o relacionamento hasMany com Contato e casting de atributos do model User",
+            "dependencies": [],
+            "details": "Criar arquivo tests/Unit/UserTest.php usando RefreshDatabase. Implementar testes: test_user_can_have_multiple_contacts() validando relacionamento hasMany, test_user_data_nascimento_is_cast_to_date() validando cast de data_nascimento para Carbon, test_user_fillable_attributes() verificando mass assignment. Usar UserFactory e ContatoFactory para criar dados de teste.",
+            "status": "pending",
+            "testStrategy": "Executar 'php artisan test --filter=UserTest'. Todos os testes devem passar. Validar que relacionamento retorna Collection de Contatos e data_nascimento é instância de Carbon."
+          },
+          {
+            "id": 2,
+            "title": "Criar tests/Unit/ContatoTest.php para testar relacionamento e enum casting",
+            "description": "Implementar testes unitários para validar o relacionamento belongsTo com User e casting do enum TipoContato",
+            "dependencies": [],
+            "details": "Criar arquivo tests/Unit/ContatoTest.php usando RefreshDatabase. Implementar testes: test_contato_belongs_to_user() validando relacionamento belongsTo retornando User correto, test_tipo_is_cast_to_enum() verificando que tipo é convertido para TipoContato enum, test_contato_fillable_attributes() testando mass assignment. Usar factories para criar usuário e contato associado.",
+            "status": "pending",
+            "testStrategy": "Executar 'php artisan test --filter=ContatoTest'. Verificar que contato->usuario retorna instância de User e contato->tipo é instância de TipoContato enum."
+          },
+          {
+            "id": 3,
+            "title": "Criar tests/Unit/FactoryTest.php para validar UserFactory e ContatoFactory",
+            "description": "Implementar testes unitários que validam se as factories geram dados válidos e consistentes",
+            "dependencies": [],
+            "details": "Criar arquivo tests/Unit/FactoryTest.php usando RefreshDatabase. Implementar testes: test_user_factory_creates_valid_user() verificando User::factory()->create() gera usuário com nome, email único e data_nascimento válidos, test_contato_factory_creates_valid_contato() validando Contato::factory()->create() gera contato com tipo enum válido e valor no formato correto (email ou telefone), test_factories_handle_relationships() testando criação de user com contatos via factory.",
+            "status": "pending",
+            "testStrategy": "Executar 'php artisan test --filter=FactoryTest'. Validar que factories não lançam exceções e geram dados persistidos no banco. Verificar unicidade de emails e formatos corretos."
+          },
+          {
+            "id": 4,
+            "title": "Criar tests/Feature/UserCrudTest.php para operações CRUD de usuário",
+            "description": "Implementar testes de feature para criar, listar, editar e deletar usuários através do Filament Resource",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Criar arquivo tests/Feature/UserCrudTest.php usando RefreshDatabase. Usar Filament testing helpers: livewire(UserResource\\Pages\\CreateUser::class)->fillForm(['nome' => 'Test', 'email' => 'test@example.com', 'data_nascimento' => '1990-01-01'])->call('create')->assertHasNoErrors(). Implementar: test_can_create_user(), test_can_list_users(), test_can_edit_user(), test_can_delete_user(). Validar redirecionamentos e mensagens de sucesso.",
+            "status": "pending",
+            "testStrategy": "Executar 'php artisan test --filter=UserCrudTest'. Verificar que cada operação CRUD persiste/modifica dados no banco. Validar que listagem exibe usuários criados e formulários validam campos obrigatórios."
+          },
+          {
+            "id": 5,
+            "title": "Criar tests/Feature/ContatoCrudTest.php para operações CRUD de contato",
+            "description": "Implementar testes de feature para criar, listar, editar e deletar contatos através do Filament Resource",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Criar arquivo tests/Feature/ContatoCrudTest.php usando RefreshDatabase. Criar usuário via factory antes de cada teste. Usar livewire(ContatoResource\\Pages\\CreateContato::class)->fillForm(['usuario_id' => $user->id, 'tipo' => 'email', 'valor' => 'test@example.com'])->call('create')->assertHasNoErrors(). Implementar: test_can_create_contato(), test_can_list_contatos(), test_can_edit_contato(), test_can_delete_contato(). Testar ambos tipos (email e telefone).",
+            "status": "pending",
+            "testStrategy": "Executar 'php artisan test --filter=ContatoCrudTest'. Validar que contatos são criados com relacionamento correto, listagem filtra por usuário, edição atualiza valores e deleção remove registros."
+          },
+          {
+            "id": 6,
+            "title": "Criar tests/Feature/ValidationTest.php para regras de validação customizadas",
+            "description": "Implementar testes de validação para email único, data futura, formato de telefone e valores duplicados por tipo",
+            "dependencies": [],
+            "details": "Criar arquivo tests/Feature/ValidationTest.php usando RefreshDatabase. Implementar testes: test_user_email_must_be_unique() validando erro ao criar usuário com email existente, test_data_nascimento_cannot_be_future() validando erro com data futura, test_contato_email_must_be_valid_format() testando formato de email, test_contato_telefone_must_be_valid_format() testando telefone BR, test_contato_valor_must_be_unique_per_type_per_user() validando duplicação. Usar livewire helpers e assertHasErrors().",
+            "status": "pending",
+            "testStrategy": "Executar 'php artisan test --filter=ValidationTest'. Cada teste deve confirmar que validação falha corretamente com assertHasErrors(['campo']). Verificar mensagens de erro apropriadas."
+          },
+          {
+            "id": 7,
+            "title": "Criar testes Filament Resources usando livewire testing helpers",
+            "description": "Implementar testes específicos para componentes Filament (CreateUser, CreateContato) validando formulários, listagens e ações",
+            "dependencies": [
+              4,
+              5
+            ],
+            "details": "Criar arquivo tests/Feature/FilamentResourceTest.php. Testar CreateUser: validar campos obrigatórios com fillForm vazio, testar searchable no select de usuário em CreateContato, validar visibilidade de colunas na table, testar ações de edição/deleção em massa, validar RelationManager de contatos dentro de UserResource. Usar livewire(UserResource\\Pages\\ListUsers::class)->assertCanSeeTableRecords() e métodos Filament.",
+            "status": "pending",
+            "testStrategy": "Executar 'php artisan test --filter=FilamentResourceTest'. Validar que formulários exibem erros em campos vazios, selects carregam opções, tabelas exibem colunas corretas e ações executam sem erros."
+          },
+          {
+            "id": 8,
+            "title": "Configurar RefreshDatabase trait em todos os testes",
+            "description": "Garantir que todos os arquivos de teste usam RefreshDatabase para isolar execuções e evitar contaminação de dados",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "details": "Revisar todos os arquivos de teste criados (UserTest, ContatoTest, FactoryTest, UserCrudTest, ContatoCrudTest, ValidationTest, FilamentResourceTest). Adicionar 'use Illuminate\\Foundation\\Testing\\RefreshDatabase; use RefreshDatabase;' em cada classe de teste. Verificar que phpunit.xml está configurado com <env name=\"DB_CONNECTION\" value=\"sqlite\"/> e <env name=\"DB_DATABASE\" value=\":memory:\"/> para testes rápidos em memória.",
+            "status": "pending",
+            "testStrategy": "Executar 'php artisan test' múltiplas vezes seguidas. Validar que contadores sempre iniciam zerados (RefreshDatabase migrando banco a cada teste). Verificar phpunit.xml com configuração sqlite in-memory."
+          },
+          {
+            "id": 9,
+            "title": "Executar suite completa de testes e corrigir falhas",
+            "description": "Rodar php artisan test para validar que todos os testes passam sem erros ou warnings",
+            "dependencies": [
+              8
+            ],
+            "details": "Executar 'php artisan test' e analisar output. Corrigir quaisquer falhas: ajustar asserções incorretas, corrigir factories se gerando dados inválidos, ajustar validações se regras mudaram, corrigir imports e namespaces. Validar que não há warnings de deprecation. Executar 'php artisan test --parallel' para testar execução paralela. Documentar quaisquer edge cases encontrados.",
+            "status": "pending",
+            "testStrategy": "Executar 'php artisan test' e obter 100% de testes passando (verde). Verificar que nenhum teste está marcado como skipped ou risky. Validar tempo de execução aceitável (<30s para suite completa)."
+          },
+          {
+            "id": 10,
+            "title": "Gerar relatório de cobertura de código e validar meta >80%",
+            "description": "Executar testes com coverage para gerar relatório e confirmar que cobertura de código atende meta de 80% ou superior",
+            "dependencies": [
+              9
+            ],
+            "details": "Instalar extensão Xdebug ou PCOV se necessário. Executar 'php artisan test --coverage --min=80' para gerar relatório e falhar se coverage <80%. Analisar relatório HTML gerado em coverage/index.html. Identificar classes/métodos não cobertos (models, resources, observers, policies). Adicionar testes adicionais para áreas críticas não cobertas. Priorizar: models (relacionamentos, casts), factories, validações, observers. Documentar cobertura final alcançada.",
+            "status": "pending",
+            "testStrategy": "Executar 'php artisan test --coverage --min=80' deve retornar sucesso (exit code 0). Abrir coverage/index.html e verificar percentual global >80%. Validar que User, Contato, factories e resources têm >90% de cobertura."
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Otimizações de performance e documentação final",
+        "description": "Implementar eager loading, índices de banco, cache, e documentar arquitetura e uso do sistema",
+        "details": "1. Otimizações de performance:\n   - Adicionar eager loading em UserResource e ContatoResource: ->with(['contatos', 'usuario'])\n   - Criar índices compostos: migration add_indexes_to_contatos (usuario_id, tipo)\n   - Configurar cache para dashboard widgets (1 minuto): Cache::remember('dashboard.stats', 60)\n2. Configurar query optimization:\n   - Usar select específico em queries (evitar select *)\n   - Implementar paginação otimizada\n3. Criar documentação:\n   - docs/SETUP.md: guia instalação, migrations, seeders, Filament\n   - docs/ARCHITECTURE.md: diagrama ER, estrutura de pastas, padrões usados\n   - docs/API.md: endpoints Filament resources (se necessário API futura)\n   - Atualizar README.md com overview do projeto\n4. Adicionar comentários PHPDoc em models e resources.\n5. Executar 'composer quality-check' final.\n6. Verificar todos critérios de aceitação do PRD.\n\nÍndice composto:\n$table->index(['usuario_id', 'tipo'], 'idx_usuario_tipo');",
+        "testStrategy": "Validar query count reduzido (debug bar): listagem users <5 queries, contatos <3 queries. Testar paginação com 1000+ registros, tempo <1s. Verificar cache dashboard funcionando. Documentação completa e precisa. 'composer quality-check' 100% success.",
+        "priority": "low",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Adicionar eager loading em UserResource e ContatoResource",
+            "description": "Implementar eager loading nos Filament Resources para evitar problema N+1 nas queries de usuários e contatos",
+            "dependencies": [],
+            "details": "1. Abrir app/Filament/Resources/UserResource.php\n2. No método table(), adicionar ->modifyQueryUsing(fn($query) => $query->with('contatos'))\n3. Abrir app/Filament/Resources/ContatoResource.php\n4. No método table(), adicionar ->modifyQueryUsing(fn($query) => $query->with('usuario'))\n5. Testar listagem de usuários e contatos verificando redução no número de queries (usar Laravel Debugbar ou Telescope)\n6. Validar que relacionamentos são carregados corretamente nas views",
+            "status": "pending",
+            "testStrategy": "Usar Laravel Debugbar para verificar queries. Listagem de usuários deve executar <5 queries totais. Listagem de contatos deve executar <3 queries totais. Confirmar dados de relacionamentos exibidos corretamente."
+          },
+          {
+            "id": 2,
+            "title": "Criar migration com índices compostos para tabela contatos",
+            "description": "Adicionar índices de banco de dados na tabela contatos para otimizar queries frequentes por usuario_id e tipo",
+            "dependencies": [],
+            "details": "1. Executar: php artisan make:migration add_indexes_to_contatos_table\n2. Na migration, adicionar no método up():\n   $table->index(['usuario_id', 'tipo'], 'idx_usuario_tipo');\n   $table->index('tipo', 'idx_tipo');\n3. No método down(), adicionar:\n   $table->dropIndex('idx_usuario_tipo');\n   $table->dropIndex('idx_tipo');\n4. Executar: php artisan migrate\n5. Verificar índices criados no banco: SHOW INDEX FROM contatos;",
+            "status": "pending",
+            "testStrategy": "Executar migration com sucesso. Verificar no banco de dados (via tinker ou cliente SQL) que índices idx_usuario_tipo e idx_tipo foram criados. Testar rollback da migration e confirmar remoção dos índices."
+          },
+          {
+            "id": 3,
+            "title": "Implementar cache para widgets do dashboard",
+            "description": "Adicionar sistema de cache com TTL de 60 segundos nos widgets de estatísticas do dashboard para reduzir carga de queries",
+            "dependencies": [],
+            "details": "1. Abrir app/Filament/Widgets/UsersOverview.php (ou widget equivalente)\n2. No método getStats() ou método de dados, envolver queries com Cache::remember():\n   Cache::remember('dashboard.stats.users', 60, fn() => User::count())\n   Cache::remember('dashboard.stats.contatos', 60, fn() => Contato::count())\n3. Abrir widget de gráfico (ContatosPorTipoChart.php)\n4. Envolver query de dados do gráfico com cache similar\n5. Adicionar invalidação de cache nos observers (opcional): Cache::forget('dashboard.stats.*') quando criar/deletar registros\n6. Testar performance com e sem cache",
+            "status": "pending",
+            "testStrategy": "Acessar dashboard, verificar cache sendo criado (Laravel Debugbar ou logs). Recarregar página dentro de 60s, confirmar dados vindo do cache (0 queries executadas). Aguardar >60s, confirmar cache expirado e novas queries executadas."
+          },
+          {
+            "id": 4,
+            "title": "Otimizar queries com select específico e paginação eficiente",
+            "description": "Refatorar queries nos Resources para usar select específico de colunas e implementar paginação otimizada",
+            "dependencies": [
+              1
+            ],
+            "details": "1. Revisar UserResource e ContatoResource\n2. Nas queries de listagem, adicionar select() específico:\n   ->select(['id', 'nome', 'email', 'created_at']) para User\n   ->select(['id', 'usuario_id', 'tipo', 'valor', 'created_at']) para Contato\n3. Verificar configuração de paginação no Resource (método getTableRecordsPerPageSelectOptions())\n4. Configurar paginação padrão otimizada: protected static ?int $navigationSort = 25;\n5. Testar queries com 1000+ registros usando seeders\n6. Validar tempo de resposta <1s",
+            "status": "pending",
+            "testStrategy": "Criar 1000+ registros usando seeders. Acessar listagens de usuários e contatos. Verificar queries executam apenas colunas necessárias (não SELECT *). Medir tempo de resposta da página (<1s). Testar navegação entre páginas da paginação."
+          },
+          {
+            "id": 5,
+            "title": "Criar documentação de setup e instalação (docs/SETUP.md)",
+            "description": "Escrever guia completo de instalação do projeto incluindo requisitos, migrations, seeders e configuração do Filament",
+            "dependencies": [],
+            "details": "1. Criar arquivo docs/SETUP.md\n2. Incluir seções:\n   - Requisitos (PHP 8.4, Laravel 13, Composer, Node.js)\n   - Instalação (clone, composer install, npm install)\n   - Configuração (.env, APP_KEY, database)\n   - Migrations (php artisan migrate)\n   - Seeders (php artisan db:seed)\n   - Criação de usuário Filament (php artisan make:filament-user)\n   - Acesso ao painel (/admin)\n   - Troubleshooting comum\n3. Adicionar exemplos de comandos com outputs esperados\n4. Incluir screenshots se necessário",
+            "status": "pending",
+            "testStrategy": "Seguir passo-a-passo do SETUP.md em ambiente limpo (fresh clone). Validar todos comandos funcionam sem erros. Confirmar que usuário consegue acessar /admin após seguir guia. Pedir feedback de outro desenvolvedor."
+          },
+          {
+            "id": 6,
+            "title": "Criar documentação de arquitetura (docs/ARCHITECTURE.md)",
+            "description": "Documentar estrutura do projeto incluindo diagrama ER, organização de pastas e padrões de código utilizados",
+            "dependencies": [],
+            "details": "1. Criar arquivo docs/ARCHITECTURE.md\n2. Incluir seções:\n   - Diagrama ER (Users ← Contatos, com cardinalidade 1:N)\n   - Estrutura de pastas (app/Models, app/Filament/Resources, app/Enums, database/)\n   - Padrões utilizados (Eloquent ORM, Filament Resources, Enums PHP 8.1+, Form Requests, Observers)\n   - Descrição dos Models (User, Contato)\n   - Descrição dos Enums (TipoContato)\n   - Relacionamentos Eloquent\n   - Convenções de código (Laravel Pint, PHPDoc)\n3. Adicionar diagrama ER em formato Mermaid ou ASCII\n4. Documentar decisões arquiteturais importantes",
+            "status": "pending",
+            "testStrategy": "Revisar ARCHITECTURE.md com desenvolvedor sênior. Validar diagrama ER reflete relacionamentos corretos. Confirmar estrutura de pastas documentada corresponde à realidade. Verificar clareza e completude da documentação."
+          },
+          {
+            "id": 7,
+            "title": "Atualizar README.md com overview do projeto",
+            "description": "Reescrever README principal com visão geral do sistema, features principais e links para documentação detalhada",
+            "dependencies": [
+              5,
+              6
+            ],
+            "details": "1. Atualizar README.md existente\n2. Incluir seções:\n   - Título e descrição do projeto (Sistema de Gerenciamento de Usuários e Contatos)\n   - Features principais (CRUD usuários, CRUD contatos, Dashboard Filament, Validações, Testes)\n   - Stack tecnológico (Laravel 13, PHP 8.4, Filament, MySQL/SQLite, Tailwind)\n   - Screenshots do sistema (opcional)\n   - Links para docs/SETUP.md e docs/ARCHITECTURE.md\n   - Seção de comandos úteis (migrate, seed, test, quality-check)\n   - Licença e contribuição\n3. Manter README conciso, delegando detalhes para docs específicos\n4. Adicionar badges (build status, coverage, etc.)",
+            "status": "pending",
+            "testStrategy": "Revisar README.md. Confirmar links para SETUP.md e ARCHITECTURE.md funcionam. Validar que overview é claro para novo desenvolvedor. Verificar formatação Markdown correta. Testar em preview do GitHub."
+          },
+          {
+            "id": 8,
+            "title": "Executar quality-check final e validar critérios de aceitação do PRD",
+            "description": "Rodar verificação de qualidade de código completa e confirmar que todos os requisitos do PRD foram atendidos",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "details": "1. Executar: composer quality-check (ou equivalente: vendor/bin/pint + php artisan test)\n2. Corrigir quaisquer problemas encontrados pelo Pint\n3. Garantir todos testes passando (100% success)\n4. Revisar checklist de critérios de aceitação do PRD:\n   - ✓ Models User e Contato criados\n   - ✓ Relacionamento 1:N implementado\n   - ✓ Enum TipoContato funcional\n   - ✓ Filament Resources completos\n   - ✓ Dashboard com widgets\n   - ✓ Validações de negócio\n   - ✓ Testes automatizados\n   - ✓ Otimizações de performance\n   - ✓ Documentação completa\n5. Marcar task como concluída se 100% dos critérios atendidos\n6. Gerar relatório final de entrega",
+            "status": "pending",
+            "testStrategy": "Executar 'composer quality-check' sem erros. Validar saída mostra 0 issues de Pint e 100% testes passando. Revisar PRD original item por item marcando cada critério como completo. Confirmar nenhum requisito pendente. Documentar eventuais desvios ou features extras."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2026-04-15T16:49:36.817Z",
+      "updated": "2026-04-15T16:49:36.817Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

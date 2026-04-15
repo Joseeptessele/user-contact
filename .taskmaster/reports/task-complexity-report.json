@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2026-04-15T16:52:48.569Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Task Master",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Configurar ferramentas de QA (Pint, PHPStan, Husky)",
+			"complexityScore": 3,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Dividir em: 1) Configurar Laravel Pint (já instalado, criar script composer), 2) Instalar e configurar PHPStan com Larastan (composer require, criar phpstan.neon), 3) Instalar Husky e criar hooks pre-commit/pre-push, 4) Validar hooks funcionando com testes propositais. Cada subtask é independente e testável.",
+			"reasoning": "Complexidade 3/10. Tarefas operacionais diretas: Pint já existe, PHPStan e Husky são instalações padrão com config conhecida. Risco baixo: possíveis conflitos em hooks ou config PHPStan level:max. 4 subtasks (Pint, PHPStan, Husky, validação) cobrem escopo."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Instalar e configurar Filament PHP v4",
+			"complexityScore": 4,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Dividir em: 1) Instalar Filament via composer, 2) Executar filament:install e publicar assets, 3) Criar usuário admin, 4) Configurar AdminPanelProvider (pt_BR, cor, timezone), 5) Validar acesso /admin e compilar frontend assets. Ordem sequencial: instalação → configuração → validação.",
+			"reasoning": "Complexidade 4/10. Instalação Filament v4 é direta, mas requer múltiplos passos (composer, artisan, npm build). Risco médio-baixo: possível incompatibilidade versão ou erro assets frontend. Depende de task 1 (hooks podem bloquear commits). 5 subtasks cobrem instalação, setup, validação."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Criar migration e model para tabela de usuários customizada",
+			"complexityScore": 5,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Dividir em: 1) Modificar migration users removendo campos auth (password, tokens) e ajustando 'name' → 'nome', 2) Adicionar campo data_nascimento, 3) Atualizar model User ($fillable, $casts, remover traits auth), 4) Criar/atualizar UserFactory com novos campos, 5) Criar UserSeeder gerando 20 registros, 6) Executar migrate:fresh e validar com tinker. Alterações em migration existente requerem cautela.",
+			"reasoning": "Complexidade 5/10. Modificar migration existente (não criar nova) + remover auth Laravel padrão = risco médio. Precisa alinhar Model, Factory, Seeder. Teste via tinker. Depende Filament (task 2). 6 subtasks (migration, model, factory, seeder, migrate, validação) para garantir consistência."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Criar migration, model e enum para tabela de contatos",
+			"complexityScore": 6,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Dividir em: 1) Criar enum TipoContato (Email, Telefone), 2) Criar migration create_contatos_table com FK usuario_id cascadeOnDelete, 3) Criar model Contato ($fillable, $casts para enum, belongsTo), 4) Adicionar hasMany no model User, 5) Criar ContatoFactory (emails/telefones fake), 6) Criar ContatoSeeder (3-5 contatos/user), 7) Executar migration e validar relacionamentos via tinker. Primeira entidade custom com enum + relacionamento.",
+			"reasoning": "Complexidade 6/10. Primeira entidade nova: enum backed (PHP 8.1+), migration com FK cascade, relacionamento 1:N bidirecional. Factory precisa gerar tipos random válidos. Testes relacionamento cruciais. Depende User customizado (task 3). 7 subtasks (enum, migration, model, relação User, factory, seeder, validação) por complexidade técnica."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Criar Filament Resource para gerenciamento de Usuários",
+			"complexityScore": 7,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Dividir em: 1) Criar UserResource via artisan make:filament-resource, 2) Configurar form schema (nome, email, data_nascimento com validações), 3) Configurar table com columns + formatação datas, 4) Adicionar filtros (range data_nascimento), 5) Configurar actions (Edit, Delete) e bulk actions, 6) Adicionar searchable e paginação, 7) Traduzir labels pt_BR, 8) Testar CRUD completo via interface /admin/users. Primeira resource Filament: padrões novos.",
+			"reasoning": "Complexidade 7/10. Primeira Filament Resource: form/table schemas, validações (email unique ignoreRecord), filtros custom, paginação, tradução. Precisa entender API Filament v4. Validação manual via browser. Depende Filament instalado (task 2) e User model pronto (task 3). 8 subtasks (resource, form, table, filtros, actions, search, i18n, teste) por detalhamento necessário."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Criar Filament Resource para gerenciamento de Contatos",
+			"complexityScore": 8,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Dividir em: 1) Criar ContatoResource, 2) Form com Select usuario_id searchable + Select tipo enum, 3) Validação condicional TextInput valor (email OU telefone BR via regex), 4) Table com TextColumn usuario.nome (eager load) + badge tipo, 5) Filtros SelectFilter tipo/usuario, 6) Actions Edit/Delete, 7) Criar RelationManager contatos em UserResource, 8) Configurar form/table RelationManager inline, 9) Testar CRUD + validações condicionais + RelationManager. Validação condicional complexa + RelationManager novo.",
+			"reasoning": "Complexidade 8/10. Resource com validação condicional dinâmica (fn Get), regex telefone BR, RelationManager (conceito avançado Filament), eager loading N+1. Testa relacionamento via UI. Depende UserResource (task 5) e Contato model/enum (task 4). 9 subtasks (resource, form, validação condicional, table, filtros, actions, RelationManager, config inline, teste) por alta complexidade técnica."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Criar Dashboard Filament com widgets de métricas",
+			"complexityScore": 5,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Dividir em: 1) Criar widget UsersOverview (StatsOverviewWidget), 2) Configurar cards com User::count(), Contato::count(), média, 3) Adicionar icons/cores heroicons, 4) Criar widget ContatosPorTipoChart (ChartWidget Pie), 5) Configurar dados por tipo e cores, 6) Registrar widgets no AdminPanelProvider e testar dashboard com polling. Widgets isolados + integração dashboard.",
+			"reasoning": "Complexidade 5/10. Widgets Filament v4 são abstrações simples (StatsOverviewWidget, ChartWidget). Queries diretas User/Contato::count(). Risco: divisão por zero se zero users, layout responsivo. Depende resources prontos (task 6). Prioridade baixa. 6 subtasks (widget stats, cards, icons, widget chart, dados, registro) adequadas."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Implementar validações de negócio e regras adicionais",
+			"complexityScore": 7,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Dividir em: 1) Criar StoreUserRequest com validações (email unique, data futura), 2) Criar StoreContatoRequest (valor único por tipo/usuario), 3) Criar ContatoObserver (normalização valor, lowercase email), 4) Registrar observer em AppServiceProvider, 5) Criar UserPolicy e ContatoPolicy (opcional), 6) Adicionar mensagens validação pt_BR, 7) Integrar Form Requests no Filament Resources, 8) Testar validações (data futura, duplicados, normalização). Validações custom + observers + integração Filament.",
+			"reasoning": "Complexidade 7/10. FormRequests Laravel + observers + políticas. Validação complexa: valor único por tipo por usuario (rule custom). Normalização em observer (side effect). Integrar com Filament Resources (pode requerer override). Mensagens i18n. Depende resources Filament (task 6). 8 subtasks (2 FormRequests, observer, registro, policies, i18n, integração, testes) por múltiplos conceitos."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Criar testes automatizados (Feature e Unit)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 10,
+			"expansionPrompt": "Dividir em: 1) Testes Unit UserTest (relacionamento, casts), 2) Unit ContatoTest (relacionamento, enum), 3) Unit FactoryTest (UserFactory, ContatoFactory válidos), 4) Feature UserCrudTest (criar/editar/deletar user), 5) Feature ContatoCrudTest (CRUD contato), 6) Feature ValidationTest (email, data futura, telefone, duplicados), 7) Testes Filament Resources (livewire helpers CreateUser, CreateContato), 8) Configurar RefreshDatabase, 9) Executar test suite, 10) Validar coverage >80% (gerar report). Cobertura ampla: models, factories, CRUD, validações, Filament.",
+			"reasoning": "Complexidade 8/10. Suite completa: Unit (relacionamentos, enums, factories) + Feature (CRUD, validações) + Filament testing (livewire). RefreshDatabase em cada teste. Coverage >80% = múltiplos cenários (happy/edge/failure paths). Testes Filament podem ser tricky (DOM, Livewire). Depende validações (task 8). 10 subtasks (3 Unit, 3 Feature, Filament, config, run, coverage) por escopo extenso."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Otimizações de performance e documentação final",
+			"complexityScore": 6,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Dividir em: 1) Adicionar eager loading (->with) em UserResource/ContatoResource, 2) Criar migration add_indexes_to_contatos (índice composto usuario_id+tipo), 3) Implementar cache dashboard widgets (Cache::remember 60s), 4) Otimizar queries (select específico, paginação), 5) Criar docs/SETUP.md (instalação, migrations, seeders), 6) Criar docs/ARCHITECTURE.md (ER, estrutura, padrões), 7) Atualizar README.md overview, 8) Executar quality-check final e verificar critérios PRD. Performance + docs extensiva.",
+			"reasoning": "Complexidade 6/10. Otimizações conhecidas: eager loading (N+1), índices compostos, cache básico. Documentação extensa (3 docs). Risco: cache invalidation, índices podem não melhorar muito com poucos dados. Valida critérios PRD completos. Depende testes (task 9). Prioridade baixa. 8 subtasks (eager load, migration índices, cache, queries, 3 docs, quality-check) por volume trabalho."
+		}
+	]
+}
